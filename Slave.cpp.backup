@@ -1,0 +1,42 @@
+#include <Arduino.h>
+#include <Wire.h>
+
+#define Address 0x04 // ต้องตั้ง Address ให้ตรงกับที่ Master เรียก
+
+// ----------------------------------------------------
+// ฟังก์ชันนี้จะทำงานอัตโนมัติ เมื่อ Master ส่งข้อมูลมาให้
+// ----------------------------------------------------
+void receiveEvent(int howMany) {
+  Serial.print("Master ส่งมาว่า: ");
+  while (Wire.available()) {
+    char c = Wire.read(); // อ่านค่าที่ Master ส่งมา
+    Serial.print(c);
+  }
+  Serial.println();
+}
+
+// ----------------------------------------------------
+// ฟังก์ชันนี้จะทำงานอัตโนมัติ เมื่อ Master ทวงถามข้อมูล
+// ----------------------------------------------------
+void requestEvent() {
+  // ส่งข้อความกลับไป 2 ไบต์ (ให้ตรงกับที่ Master ขอใน requestFrom)
+  Wire.write("OK"); 
+}
+
+void setup() {
+  Serial.begin(115200);
+
+  // เริ่มต้น I2C ในโหมด Slave โดยระบุ Address ของตัวเองเข้าไป
+  // (ถ้าใส่แค่เลข Address แบบนี้ ESP32 จะรู้ทันทีว่าเป็น Slave และใช้ขา 21, 22 อัตโนมัติ)
+  Wire.begin(Address); 
+
+  // ผูกฟังก์ชัน (Interrupt) ว่าจะให้ทำอะไรเมื่อ Master ติดต่อมา
+  Wire.onReceive(receiveEvent); // เมื่อ Master "ส่ง" ข้อมูลมาให้
+  Wire.onRequest(requestEvent); // เมื่อ Master "ร้องขอ" ข้อมูล
+
+}
+
+void loop() {
+  // ไม่ต้องเขียนอะไรใน loop() เพราะ I2C ทำงานอยู่เบื้องหลัง (Interrupt)
+  delay(100);
+}

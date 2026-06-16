@@ -1,0 +1,47 @@
+#include <Arduino.h>
+#include <Wire.h>
+#include "Motor.h"
+#include "config.h"
+
+#define Address 0x02
+
+Motor MotorFL(MotorPinS2FL_A, MotorPinS2FL_B, S2_MAX_RPM);
+Motor MotorFR(MotorPinS2FR_A, MotorPinS2FR_B, S2_MAX_RPM);
+Motor MotorRL(MotorPinS2RL_A, MotorPinS2RL_B, S2_MAX_RPM);
+Motor MotorRR(MotorPinS2RR_A, MotorPinS2RR_B, S2_MAX_RPM);
+
+// ----------------------------------------------------
+// ฟังก์ชันนี้จะทำงานอัตโนมัติ เมื่อ Master ส่งข้อมูลมาให้
+// ----------------------------------------------------
+// void receiveEvent(int howMany) {
+//   Serial.print("Master ส่งมาว่า: ");
+//   while (Wire.available()) {
+//     char c = Wire.read(); // อ่านค่าที่ Master ส่งมา
+//     Serial.print(c);
+//   }
+//   Serial.println();
+// }
+
+// ----------------------------------------------------
+// ฟังก์ชันนี้จะทำงานอัตโนมัติ เมื่อ Master ทวงถามข้อมูล
+// ----------------------------------------------------
+void requestEvent() {
+  // ส่งข้อความกลับไป 2 ไบต์ (ให้ตรงกับที่ Master ขอใน requestFrom)
+  Wire.write("OK from S2"); 
+}
+
+void setup() {
+  Serial.begin(115200);
+
+  Wire.begin(Address); 
+
+  // ผูกฟังก์ชัน (Interrupt) ว่าจะให้ทำอะไรเมื่อ Master ติดต่อมา
+  // Wire.onReceive(receiveEvent); // เมื่อ Master "ส่ง" ข้อมูลมาให้
+  Wire.onRequest(requestEvent); // เมื่อ Master "ร้องขอ" ข้อมูล
+
+}
+
+void loop() {
+  // ไม่ต้องเขียนอะไรใน loop() เพราะ I2C ทำงานอยู่เบื้องหลัง (Interrupt)
+  delay(100);
+}
