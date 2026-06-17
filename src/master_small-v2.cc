@@ -4,7 +4,6 @@
 #include "Holding.h"
 #include "Kinematics.h"
 #include <PS4Controller.h>
-#include <Wire.h>
 
 Motor MotorFL(MotorPinFLM1_A, MotorPinFLM1_B, MAX_RPM);
 Motor MotorFR(MotorPinFRM1_A, MotorPinFRM1_B, MAX_RPM);
@@ -24,9 +23,9 @@ float f_walkspeed = 1.2+0.3;
 float n_walkspeed = 0.5;
 
 float f_turnspeed = 3.0+0.2;
-float n_turnspeed = 2.0;
+float n_turnspeed = 1.0;
 
-float f_slidespeed = 1.8+0.2;
+float f_slidespeed = 1.0;
 float n_slidespeed = 0.5;
 //------------------------------------
 float walkspeed = n_walkspeed;
@@ -39,6 +38,7 @@ bool last_square_state = false;
 bool last_triangle_state = false;
 bool last_x_state = false;
 bool last_share_state = false;
+bool last_l2_state = false;
 
 char last_lift_state = 'S'; 
 
@@ -53,10 +53,10 @@ const int RStickY_Calib = 100;
 // =========================================================
 
 // --- 🔴 โหมดปกติ / เร็ว (ไม่กด R2) ---
-float comp_fast_right_x = 1.2;  // สไลด์ขวา: แก้เบี้ยวหน้า-หลัง (บวก=เดินหน้า, ลบ=ถอยหลัง)
+float comp_fast_right_x = 0.0;  // สไลด์ขวา: แก้เบี้ยวหน้า-หลัง (บวก=เดินหน้า, ลบ=ถอยหลัง)
 float comp_fast_right_z = 0.0;  // สไลด์ขวา: แก้บิดหมุน (บวก=หมุนซ้าย, ลบ=หมุนขวา)
-float comp_fast_left_x  = 0.0;  // สไลด์ซ้าย: แก้เบี้ยวหน้า-หลัง
-float comp_fast_left_z  = 2.0;  // สไลด์ซ้าย: แก้บิดหมุน
+float comp_fast_left_x  = 0.3;  // สไลด์ซ้าย: แก้เบี้ยวหน้า-หลัง
+float comp_fast_left_z  = 0.13;  // สไลด์ซ้าย: แก้บิดหมุน
 
 // --- 🐢 โหมดช้า (กด R2) ---
 float comp_slow_right_x = 0.0;  // สไลด์ขวา: แก้เบี้ยวหน้า-หลัง 
@@ -103,10 +103,8 @@ void moveBase() {
     }
   }
 
-  // 3. ส่งค่าตัวแปรใหม่ไปให้ Kinematics คำนวณ 
   Kinematics::rpm req_rpm = kinematics.getRPM(forward_backward_speed, slide_speed, spin_speed);
 
-  // 4. สั่งมอเตอร์หมุน
   MotorFL.runRPM(req_rpm.motor1);
   MotorFR.runRPM(req_rpm.motor2);
   MotorRL.runRPM(req_rpm.motor3);
@@ -152,8 +150,8 @@ void update_control() {
   else if (PS4.Down() || PS4.DownRight() || PS4.DownLeft()) d_x = -walkspeed;
 
   // ควบคุมการสไลด์ซ้าย / ขวา
-  if (PS4.Left() || PS4.UpLeft() || PS4.DownLeft()) d_y = -slidespeed;
-  else if (PS4.Right() || PS4.UpRight() || PS4.DownRight()) d_y = slidespeed;
+  if (PS4.Left() || PS4.UpLeft() || PS4.DownLeft()) d_y = slidespeed;
+  else if (PS4.Right() || PS4.UpRight() || PS4.DownRight()) d_y = -slidespeed;
 
   // ควบคุมการหมุนตัว
   if (PS4.L1()) d_z = turnspeed;
@@ -166,18 +164,37 @@ void update_control() {
 }
 
 void digital_control(){
-//   bool triangle_pressed = PS4.Triangle();
-//   if (triangle_pressed && !last_triangle_state) {
-//     digitalWrite(RelayM1_PIN3, !digitalRead(RelayM1_PIN3));
-//   }
-//   last_triangle_state = triangle_pressed;
+  bool triangle_pressed = PS4.Triangle();
+  if (triangle_pressed && !last_triangle_state) {
+    Serial2.write('A'); 
+  }
+  last_triangle_state = triangle_pressed;
 
-//   if (PS4.L2()) {
-//     digitalWrite(RelayM1_PIN2, LOW); 
-//   } else {
-//     digitalWrite(RelayM1_PIN2, HIGH);
-//   }
+  bool square_pressed = PS4.Square();
+  if (square_pressed && !last_square_state) {
+    Serial2.write('B'); 
+  }
+  last_square_state = square_pressed;
 
+  bool x_pressed = PS4.Cross();
+  if (x_pressed && !last_x_state) {
+    Serial2.write('C');
+  } else if (!x_pressed && last_x_state) {
+    Serial2.write('c');
+  }
+  last_x_state = x_pressed;
+
+  bool l2_pressed = PS4.L2();
+  if (l2_pressed && !last_l2_state) {
+    Serial2.write('D'); 
+  }
+  last_l2_state = l2_pressed;
+
+  // if (PS4.L2()) {
+  //   Serial2.write('D'); 
+  // }
+
+  
 //   bool share_pressed = PS4.Share();
 //   if (share_pressed && !last_share_state) {
 //     digitalWrite(RelayM1_PIN1, !digitalRead(RelayM1_PIN1));
@@ -191,13 +208,7 @@ void digital_control(){
 //   last_options_state = options_pressed;
 
 //   // sent to slave
-//   bool square_pressed = PS4.Square();
-//   if (square_pressed && !last_square_state) {
-//     Wire.beginTransmission(Address_Small);
-//     Wire.write('A');
-//     Wire.endTransmission();
-//   }
-//   last_square_state = square_pressed;
+
 
 //   bool circle_pressed = PS4.Circle();
 //   if (circle_pressed && !last_circle_state) {
@@ -206,14 +217,6 @@ void digital_control(){
 //     Wire.endTransmission();
 //     }
 //     last_circle_state = circle_pressed;  
-
-//   bool x_pressed = PS4.Cross();
-//   if (x_pressed && !last_x_state) {
-//     Wire.beginTransmission(Address_Small);
-//     Wire.write('Z');
-//     Wire.endTransmission();
-//   }
-//   last_x_state = x_pressed;
 }
 
 void lift_control() {
@@ -259,15 +262,15 @@ void setup() {
 
   // setCpuFrequencyMhz(240);
   PS4.begin(MAC);
-  pinMode(RelayM1_PIN1, OUTPUT);
-  pinMode(RelayM1_PIN2, OUTPUT);
-  pinMode(RelayM1_PIN3, OUTPUT);
-  pinMode(RelayM1_PIN4, OUTPUT);
+  pinMode(RELAY_1, OUTPUT);
+  pinMode(RELAY_2, OUTPUT);
+  pinMode(RELAY_3, OUTPUT);
+  pinMode(RELAY_4, OUTPUT);
   
-  digitalWrite(RelayM1_PIN1, HIGH);
-  digitalWrite(RelayM1_PIN2, HIGH);
-  digitalWrite(RelayM1_PIN3, HIGH);
-  digitalWrite(RelayM1_PIN4, HIGH);
+  digitalWrite(RELAY_1, HIGH);
+  digitalWrite(RELAY_2, HIGH);
+  digitalWrite(RELAY_3, HIGH);
+  digitalWrite(RELAY_4, HIGH);
 }
 
 void loop() {
