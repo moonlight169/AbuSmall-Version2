@@ -27,7 +27,7 @@ float f_turnspeed = 3.0+0.2;
 float n_turnspeed = 2.0;
 
 float f_slidespeed = 1.8+0.2;
-float n_slidespeed = 1.2;
+float n_slidespeed = 0.5;
 //------------------------------------
 float walkspeed = n_walkspeed;
 float turnspeed = n_turnspeed;
@@ -47,6 +47,26 @@ const int LStickY_Calib = 100;
 const int RStickX_Calib = 100;
 const int RStickY_Calib = 100;
 
+// =========================================================
+// 🎯 โซนตั้งค่า: ปรับจูนอาการเบี้ยวตอนสไลด์ (แยกโหมด ช้า/เร็ว)
+// นำไปวางไว้ด้านบนของฟังก์ชัน moveBase หรือตรงกลุ่มตัวแปร Global
+// =========================================================
+
+// --- 🔴 โหมดปกติ / เร็ว (ไม่กด R2) ---
+float comp_fast_right_x = 1.2;  // สไลด์ขวา: แก้เบี้ยวหน้า-หลัง (บวก=เดินหน้า, ลบ=ถอยหลัง)
+float comp_fast_right_z = 0.0;  // สไลด์ขวา: แก้บิดหมุน (บวก=หมุนซ้าย, ลบ=หมุนขวา)
+float comp_fast_left_x  = 0.0;  // สไลด์ซ้าย: แก้เบี้ยวหน้า-หลัง
+float comp_fast_left_z  = 2.0;  // สไลด์ซ้าย: แก้บิดหมุน
+
+// --- 🐢 โหมดช้า (กด R2) ---
+float comp_slow_right_x = 0.0;  // สไลด์ขวา: แก้เบี้ยวหน้า-หลัง 
+float comp_slow_right_z = 0.0;  // สไลด์ขวา: แก้บิดหมุน
+float comp_slow_left_x  = 0.0;  // สไลด์ซ้าย: แก้เบี้ยวหน้า-หลัง
+float comp_slow_left_z  = 0.0;  // สไลด์ซ้าย: แก้บิดหมุน
+
+// =========================================================
+
+
 void moveBase() {
   float forward_backward_speed = g_req_linear_vel_x; // เดินหน้า(+), ถอยหลัง(-)
   float slide_speed = g_req_linear_vel_y;            // สไลด์ขวา(+), สไลด์ซ้าย(-)
@@ -54,40 +74,36 @@ void moveBase() {
 
   if (slide_speed != 0 && forward_backward_speed == 0 && spin_speed == 0) {
     
+    // เช็คโหมดความเร็ว: ถ้ายอดความเร็วสไลด์เท่ากับ n_slidespeed แสดงว่าเป็นโหมดช้า
+    bool is_slow_mode = (abs(slide_speed) == n_slidespeed);
+
     if (slide_speed > 0) { 
       // ==========================================
       // ➡️ โหมด: กำลังสไลด์ขวา
       // ==========================================
-      
-      // [แก้เบี้ยวหน้า-หลัง] 
-      // หุ่นแอบถอยหลัง -> ให้ใส่ค่า "บวก" (เพื่อดันเดินหน้า)
-      // หุ่นแอบเดินหน้า -> ให้ใส่ค่า "ลบ" (เพื่อดึงถอยหลัง)
-      forward_backward_speed = 1.2;  
-      
-      // [แก้บิดหมุน] 
-      // หุ่นแอบหมุนขวา -> ให้ใส่ค่า "บวก" (เพื่อต้านหมุนซ้าย)
-      // หุ่นแอบหมุนซ้าย -> ให้ใส่ค่า "ลบ" (เพื่อต้านหมุนขวา)
-      spin_speed = 0;  
-      
+      if (is_slow_mode) {
+        forward_backward_speed = comp_slow_right_x; 
+        spin_speed = comp_slow_right_z;             
+      } else {
+        forward_backward_speed = comp_fast_right_x;  
+        spin_speed = comp_fast_right_z;  
+      }
     } 
     else if (slide_speed < 0) { 
       // ==========================================
       // ⬅️ โหมด: กำลังสไลด์ซ้าย
       // ==========================================
-      
-      // [แก้เบี้ยวหน้า-หลัง] 
-      // หุ่นแอบถอยหลัง -> ให้ใส่ค่า "บวก" (เพื่อดันเดินหน้า)
-      // หุ่นแอบเดินหน้า -> ให้ใส่ค่า "ลบ" (เพื่อดึงถอยหลัง)
-      forward_backward_speed = 0.0; 
-      
-      // [แก้บิดหมุน] 
-      // หุ่นแอบหมุนขวา -> ให้ใส่ค่า "บวก" (เพื่อต้านหมุนซ้าย)
-      // หุ่นแอบหมุนซ้าย -> ให้ใส่ค่า "ลบ" (เพื่อต้านหมุนขวา)
-      spin_speed = 2.0;  
+      if (is_slow_mode) {
+        forward_backward_speed = comp_slow_left_x; 
+        spin_speed = comp_slow_left_z;             
+      } else {
+        forward_backward_speed = comp_fast_left_x; 
+        spin_speed = comp_fast_left_z;  
+      }
     }
   }
 
-  // 3. ส่งค่าตัวแปรใหม่ไปให้ Kinematics คำนวณ (เรียงลำดับ x, y, z เหมือนเดิม)
+  // 3. ส่งค่าตัวแปรใหม่ไปให้ Kinematics คำนวณ 
   Kinematics::rpm req_rpm = kinematics.getRPM(forward_backward_speed, slide_speed, spin_speed);
 
   // 4. สั่งมอเตอร์หมุน
@@ -96,6 +112,7 @@ void moveBase() {
   MotorRL.runRPM(req_rpm.motor3);
   MotorRR.runRPM(req_rpm.motor4);
 }
+
 void stopAllMotors() {
   g_req_linear_vel_x = 0;
   g_req_linear_vel_y = 0;
