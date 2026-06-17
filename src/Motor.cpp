@@ -76,18 +76,23 @@ void Motor::run(int speed)
 
     if (this->_speed > 0)
     {
+        pinMode(this->_pinA, OUTPUT); // ตรวจสอบให้มั่นใจว่าเป็น OUTPUT
+        pinMode(this->_pinB, OUTPUT);
         analogWrite(this->_pinA, abs(this->_speed));
         analogWrite(this->_pinB, 0);
     }
     else if (this->_speed < 0)
     {
+        pinMode(this->_pinA, OUTPUT);
+        pinMode(this->_pinB, OUTPUT);
         analogWrite(this->_pinA, 0);
         analogWrite(this->_pinB, abs(this->_speed));
     }
     else
     {
-        analogWrite(this->_pinA, 0);
-        analogWrite(this->_pinB, 0);
+        // เปลี่ยนเป็น INPUT เพื่อให้ขาพินลอย (Float) มอเตอร์จะไหลอิสระ
+        pinMode(this->_pinA, INPUT);
+        pinMode(this->_pinB, INPUT);
     }
 }
 void Motor::run()

@@ -1,5 +1,6 @@
 #include <PS4Controller.h>
 #include <nvs_flash.h> // ไลบรารีสำหรับจัดการหน่วยความจำหลัก
+#include "config.h"
 
 void setup() {
   Serial.begin(115200);
@@ -10,7 +11,7 @@ void setup() {
   // --------------------------------------------------------
 
   // ใส่ MAC ให้ตรงกับที่ตั้งในจอย
-  PS4.begin("08:a6:f7:10:a8:5c"); 
+  PS4.begin(MAC); 
   
   Serial.println("Memory cleared! Ready and waiting for PS4...");
 }
