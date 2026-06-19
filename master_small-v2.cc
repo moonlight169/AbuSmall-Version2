@@ -40,7 +40,8 @@ bool last_x_state = false;
 bool last_share_state = false;
 bool last_l2_state = false;
 
-char last_lift_state = 'S'; 
+char last_box_state = 'U'; // U = คำสั่งหยุด Box
+char last_arm_state = 'V'; // V = คำสั่งหยุด Arm
 
 const int LStickX_Calib = 100;
 const int LStickY_Calib = 100;
@@ -116,11 +117,11 @@ void stopAllMotors() {
   g_req_linear_vel_y = 0;
   g_req_angular_vel_z = 0;
   MotorFL.run(0); MotorFR.run(0); MotorRL.run(0); MotorRR.run(0);
-  
-  if (last_lift_state != 'S') {
-    Serial2.write('S');
 
-    last_lift_state = 'S';
+  if (last_box_state != 'U' || last_arm_state != 'V') {
+    Serial2.write('S');
+    last_box_state = 'U';
+    last_arm_state = 'V';
   }
 }
 
@@ -222,36 +223,34 @@ void lift_control() {
   int R_Y = PS4.RStickY();
   int L_Y = PS4.LStickY();
   
-  char current_state = last_lift_state; 
+  char current_box_state = 'U';
+  char current_arm_state = 'V';
 
+  // --- 1. ตรวจจับและตั้งสถานะให้ Box (R_Y) ---
   if (abs(R_Y) > RStickY_Calib) {
     if (R_Y > 0) {
-      current_state = (walkspeed == f_walkspeed) ? 'E' : 'e';
+      current_box_state = (walkspeed == f_walkspeed) ? 'E' : 'e';
     } else {
-      current_state = (walkspeed == f_walkspeed) ? 'F' : 'f';
+      current_box_state = (walkspeed == f_walkspeed) ? 'F' : 'f';
     }
   } 
 
-  else if (abs(L_Y) > LStickY_Calib) {
+  // --- 2. ตรวจจับและตั้งสถานะให้ Arm (L_Y) ---
+  if (abs(L_Y) > LStickY_Calib) {
     if (L_Y > 0) {
-      current_state = (walkspeed == f_walkspeed) ? 'G' : 'g';
+      current_arm_state = (walkspeed == f_walkspeed) ? 'G' : 'g';
     } else {
-      current_state = (walkspeed == f_walkspeed) ? 'H' : 'h';
+      current_arm_state = (walkspeed == f_walkspeed) ? 'H' : 'h';
     }
   } 
-  else {
-    if (last_lift_state == 'E' || last_lift_state == 'e' || 
-        last_lift_state == 'F' || last_lift_state == 'f' ||
-        last_lift_state == 'G' || last_lift_state == 'g' || 
-        last_lift_state == 'H' || last_lift_state == 'h' ) {
-      current_state = 'S'; 
-    }
+  if (current_box_state != last_box_state) {
+    Serial2.write(current_box_state);
+    last_box_state = current_box_state;
   }
 
-  if (current_state != last_lift_state) {
-    Serial2.write(current_state);
-
-    last_lift_state = current_state;
+  if (current_arm_state != last_arm_state) {
+    Serial2.write(current_arm_state);
+    last_arm_state = current_arm_state;
   }
 }
 
@@ -261,15 +260,6 @@ void setup() {
 
   // setCpuFrequencyMhz(240);
   PS4.begin(MAC);
-  pinMode(RELAY_1, OUTPUT);
-  pinMode(RELAY_2, OUTPUT);
-  pinMode(RELAY_3, OUTPUT);
-  pinMode(RELAY_4, OUTPUT);
-  
-  digitalWrite(RELAY_1, HIGH);
-  digitalWrite(RELAY_2, HIGH);
-  digitalWrite(RELAY_3, HIGH);
-  digitalWrite(RELAY_4, HIGH);
 }
 
 void loop() {

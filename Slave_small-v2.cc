@@ -1,7 +1,8 @@
 #include <Arduino.h>
 #include "config.h" // ดึงการตั้งค่าพินทั้งหมดจากไฟล์ของคุณมาใช้ตรงๆ
 
-volatile char motorState = 'S'; 
+volatile char boxState = 'U';
+volatile char armState = 'V';
 
 // --- ตั้งค่า PWM สำหรับ ESP32 ---
 const int freq = 5000;      // ความถี่ 5kHz
@@ -19,7 +20,7 @@ const int speed_box_fast = 180;
 const int speed_box_slow = 36; 
 
 const int speed_arm_fast = 150;
-const int speed_arm_slow = 20;
+const int speed_arm_slow = 30;
 
 void setup(){
     Serial.begin(115200);
@@ -65,7 +66,7 @@ void stopAllMotors() {
 }
 
 void loop() {
-    if (Serial2.available()) {
+    while (Serial2.available()) {
         char command = Serial2.read();
 
         Serial.print("-> Received: '");
@@ -83,10 +84,15 @@ void loop() {
         } else if (command == 'D') {
             digitalWrite(RELAY_4, !digitalRead(RELAY_4));
         } 
-        else if (command == 'E' || command == 'e' || command == 'F' || command == 'f' ||
-                 command == 'G' || command == 'g' || command == 'H' || command == 'h' || 
-                 command == 'S') {
-            motorState = command;
+        else if (command == 'E' || command == 'e' || command == 'F' || command == 'f' || command == 'U') {
+            boxState = command;
+        }
+        else if (command == 'G' || command == 'g' || command == 'H' || command == 'h' || command == 'V') {
+            armState = command;
+        }
+        else if (command == 'S') { 
+            boxState = 'U';
+            armState = 'V';
         }
     }
 
@@ -100,25 +106,31 @@ void loop() {
     int arm_speed_A = 0;
     int arm_speed_B = 0;
 
-    if (motorState == 'E' || motorState == 'e') {
+    // =========================================
+    // ประมวลผลมอเตอร์ Box
+    // =========================================
+    if (boxState == 'E' || boxState == 'e') {
         if (!hit_box_back) {
-            box_speed_A = (motorState == 'E') ? speed_box_fast : speed_box_slow;
+            box_speed_A = (boxState == 'E') ? speed_box_fast : speed_box_slow;
         }
     } 
-    else if (motorState == 'F' || motorState == 'f') {
+    else if (boxState == 'F' || boxState == 'f') {
         if (!hit_box_front) {
-            box_speed_B = (motorState == 'F') ? speed_box_fast : speed_box_slow;
+            box_speed_B = (boxState == 'F') ? speed_box_fast : speed_box_slow;
         }
     }
 
-    if (motorState == 'G' || motorState == 'g') {
+    // =========================================
+    // ประมวลผลมอเตอร์ Arm (ทำงานอิสระจาก Box)
+    // =========================================
+    if (armState == 'G' || armState == 'g') {
         if (!hit_arm_back) {
-            arm_speed_A = (motorState == 'G') ? speed_arm_fast : speed_arm_slow;
+            arm_speed_A = (armState == 'G') ? speed_arm_fast : speed_arm_slow;
         }
     } 
-    else if (motorState == 'H' || motorState == 'h') {
+    else if (armState == 'H' || armState == 'h') {
         if (!hit_arm_front) {
-            arm_speed_B = (motorState == 'H') ? speed_arm_fast : speed_arm_slow;
+            arm_speed_B = (armState == 'H') ? speed_arm_fast : speed_arm_slow;
         }
     }
 
