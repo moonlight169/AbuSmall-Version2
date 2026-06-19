@@ -117,12 +117,11 @@ void stopAllMotors() {
   g_req_angular_vel_z = 0;
   MotorFL.run(0); MotorFR.run(0); MotorRL.run(0); MotorRR.run(0);
   
-  // if (last_lift_state != 'S') {
-  //   Wire.beginTransmission(Address_Small);
-  //   Wire.write('S');
-  //   Wire.endTransmission();
-  //   last_lift_state = 'S';
-  // }
+  if (last_lift_state != 'S') {
+    Serial2.write('S');
+
+    last_lift_state = 'S';
+  }
 }
 
 void update_control() {
@@ -150,8 +149,8 @@ void update_control() {
   else if (PS4.Down() || PS4.DownRight() || PS4.DownLeft()) d_x = -walkspeed;
 
   // ควบคุมการสไลด์ซ้าย / ขวา
-  if (PS4.Left() || PS4.UpLeft() || PS4.DownLeft()) d_y = slidespeed;
-  else if (PS4.Right() || PS4.UpRight() || PS4.DownRight()) d_y = -slidespeed;
+  if (PS4.Left() || PS4.UpLeft() || PS4.DownLeft()) d_y = -slidespeed;
+  else if (PS4.Right() || PS4.UpRight() || PS4.DownRight()) d_y = slidespeed;
 
   // ควบคุมการหมุนตัว
   if (PS4.L1()) d_z = turnspeed;
@@ -220,40 +219,40 @@ void digital_control(){
 }
 
 void lift_control() {
-//   int R_Y = PS4.RStickY();
-//   int L_Y = PS4.LStickY();
+  int R_Y = PS4.RStickY();
+  int L_Y = PS4.LStickY();
   
-//   char current_state = last_lift_state; 
+  char current_state = last_lift_state; 
 
-//   if (abs(R_Y) > RStickY_Calib) {
-//     if (R_Y > 0) {
-//       current_state = (walkspeed == f_walkspeed) ? 'D' : 'd';
-//     } else {
-//       current_state = (walkspeed == f_walkspeed) ? 'U' : 'u';
-//     }
-//   } 
+  if (abs(R_Y) > RStickY_Calib) {
+    if (R_Y > 0) {
+      current_state = (walkspeed == f_walkspeed) ? 'E' : 'e';
+    } else {
+      current_state = (walkspeed == f_walkspeed) ? 'F' : 'f';
+    }
+  } 
 
-//   else if (abs(L_Y) > LStickY_Calib) {
-//     if (L_Y > 0) {
-//       current_state = (walkspeed == f_walkspeed) ? 'O' : 'o';
-//     } else {
-//       current_state = (walkspeed == f_walkspeed) ? 'C' : 'c';
-//     }
-//   } 
-//   else {
-//     if (last_lift_state == 'U' || last_lift_state == 'u' || 
-//         last_lift_state == 'D' || last_lift_state == 'd') {
-//       current_state = 'S'; 
-//     }
-//   }
+  else if (abs(L_Y) > LStickY_Calib) {
+    if (L_Y > 0) {
+      current_state = (walkspeed == f_walkspeed) ? 'G' : 'g';
+    } else {
+      current_state = (walkspeed == f_walkspeed) ? 'H' : 'h';
+    }
+  } 
+  else {
+    if (last_lift_state == 'E' || last_lift_state == 'e' || 
+        last_lift_state == 'F' || last_lift_state == 'f' ||
+        last_lift_state == 'G' || last_lift_state == 'g' || 
+        last_lift_state == 'H' || last_lift_state == 'h' ) {
+      current_state = 'S'; 
+    }
+  }
 
-//   if (current_state != last_lift_state) {
-//     Wire.beginTransmission(Address_Small);
-//     Wire.write(current_state);
-//     Wire.endTransmission();
-    
-//     last_lift_state = current_state;
-//   }
+  if (current_state != last_lift_state) {
+    Serial2.write(current_state);
+
+    last_lift_state = current_state;
+  }
 }
 
 void setup() {

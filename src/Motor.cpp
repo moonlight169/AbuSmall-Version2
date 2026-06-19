@@ -90,9 +90,8 @@ void Motor::run(int speed)
     }
     else
     {
-        // เปลี่ยนเป็น INPUT เพื่อให้ขาพินลอย (Float) มอเตอร์จะไหลอิสระ
-        pinMode(this->_pinA, INPUT);
-        pinMode(this->_pinB, INPUT);
+        analogWrite(this->_pinA, 0);
+        analogWrite(this->_pinB, 0);
     }
 }
 void Motor::run()
