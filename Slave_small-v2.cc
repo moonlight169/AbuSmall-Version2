@@ -20,7 +20,7 @@ const int speed_box_fast = 180;
 const int speed_box_slow = 36; 
 
 const int speed_arm_fast = 150;
-const int speed_arm_slow = 30;
+const int speed_arm_slow = 36;
 
 void setup(){
     Serial.begin(115200);

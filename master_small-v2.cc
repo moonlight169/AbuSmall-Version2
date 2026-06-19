@@ -21,12 +21,16 @@ float g_req_angular_vel_z = 0;
 
 float f_walkspeed = 1.2+0.3;
 float n_walkspeed = 0.5;
+float s_walkspeed = 0.2; // 🐢 ช้ามาก (เดินหน้า/ถอยหลัง)
 
 float f_turnspeed = 3.0+0.2;
 float n_turnspeed = 1.0;
+float s_turnspeed = 0.7; // 🐢 ช้ามาก (หมุนตัว)
 
 float f_slidespeed = 1.0;
 float n_slidespeed = 0.5;
+float s_slidespeed = 0.5; // 🐢 ช้ามาก (สไลด์ข้าง)
+
 //------------------------------------
 float walkspeed = n_walkspeed;
 float turnspeed = n_turnspeed;
@@ -131,11 +135,19 @@ void update_control() {
     return;
   }
   
-  if (PS4.R2()) {
+  // 🎮 ลำดับการเช็คโหมดความเร็ว
+  if (PS4.L2()) {
+    // 🐢 โหมดช้ามาก (กด L2)
+    walkspeed = s_walkspeed;
+    turnspeed = s_turnspeed;
+    slidespeed = s_slidespeed;
+  } else if (PS4.R2()) {
+    // 🚶 โหมดช้าปกติ (กด R2)
     walkspeed = n_walkspeed;
     turnspeed = n_turnspeed;
     slidespeed = n_slidespeed;
   } else {
+    // 🏃 โหมดปกติ/เร็ว (ไม่ได้กดอะไร)
     walkspeed = f_walkspeed;
     turnspeed = f_turnspeed;
     slidespeed = f_slidespeed;
@@ -184,11 +196,11 @@ void digital_control(){
   }
   last_x_state = x_pressed;
 
-  bool l2_pressed = PS4.L2();
-  if (l2_pressed && !last_l2_state) {
+  bool circle_pressed = PS4.Circle();
+  if (circle_pressed && !last_circle_state) {
     Serial2.write('D'); 
   }
-  last_l2_state = l2_pressed;
+  last_circle_state = circle_pressed;  
 
   // if (PS4.L2()) {
   //   Serial2.write('D'); 
