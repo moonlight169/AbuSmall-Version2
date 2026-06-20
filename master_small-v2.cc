@@ -15,20 +15,22 @@ Kinematics kinematics(Kinematics::MECANUM, MAX_RPM, WHEEL_DIAMETER, FR_WHEELS_DI
 #define COMMAND_RATE 50
 unsigned long prev_control_time = 0;
 
+float Nerf = 0.9;
+
 float g_req_linear_vel_x = 0;
 float g_req_linear_vel_y = 0;
 float g_req_angular_vel_z = 0;
 
-float f_walkspeed = 1.5 * 0.9;
-float n_walkspeed = 0.5 * 0.9;
+float f_walkspeed = 1.5 * Nerf;
+float n_walkspeed = 0.5 * Nerf;
 float s_walkspeed = 0.2; 
 
-float f_turnspeed = 3.2 * 0.9;
-float n_turnspeed = 1.0 * 0.9;
+float f_turnspeed = 3.2 * Nerf;
+float n_turnspeed = 1.0 * Nerf;
 float s_turnspeed = 0.7; 
 
-float f_slidespeed = 1.0 * 0.9;
-float n_slidespeed = 0.5 * 0.9;
+float f_slidespeed = 1.0 * Nerf;
+float n_slidespeed = 0.5 * Nerf;
 float s_slidespeed = 0.5; 
 
 //------------------------------------
