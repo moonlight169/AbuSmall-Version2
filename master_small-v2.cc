@@ -36,6 +36,14 @@ float walkspeed = n_walkspeed;
 float turnspeed = n_turnspeed;
 float slidespeed = n_slidespeed;
 
+// =========================================================
+// 🎯 โซนตั้งค่าตัวแปร State และ Threshold แก้บัค
+// =========================================================
+enum SpeedMode { FAST_MODE, NORMAL_MODE, SLOW_MODE };
+SpeedMode current_mode = FAST_MODE;
+
+const int TRIGGER_THRESHOLD = 30; // กันจอยลั่น (0-255) นิ้วแตะเบาๆ จะไม่ทำงาน
+
 bool last_options_state = false; 
 bool last_circle_state = false;
 bool last_square_state = false;
@@ -54,23 +62,21 @@ const int RStickY_Calib = 100;
 
 // =========================================================
 // 🎯 โซนตั้งค่า: ปรับจูนอาการเบี้ยวตอนสไลด์ (แยกโหมด ช้า/เร็ว)
-// นำไปวางไว้ด้านบนของฟังก์ชัน moveBase หรือตรงกลุ่มตัวแปร Global
 // =========================================================
 
-// --- 🔴 โหมดปกติ / เร็ว (ไม่กด R2) ---
+// --- 🔴 โหมดปกติ / เร็ว (ไม่กด R2/L2) ---
 float comp_fast_right_x = -0.1;  // สไลด์ขวา: แก้เบี้ยวหน้า-หลัง (บวก=เดินหน้า, ลบ=ถอยหลัง)
 float comp_fast_right_z = 0.13;  // สไลด์ขวา: แก้บิดหมุน (บวก=หมุนซ้าย, ลบ=หมุนขวา)
-float comp_fast_left_x  = 0.3;  // สไลด์ซ้าย: แก้เบี้ยวหน้า-หลัง
+float comp_fast_left_x  = 0.3;   // สไลด์ซ้าย: แก้เบี้ยวหน้า-หลัง
 float comp_fast_left_z  = 0.13;  // สไลด์ซ้าย: แก้บิดหมุน
 
-// --- 🐢 โหมดช้า (กด R2) ---
-float comp_slow_right_x = 0.0;  // สไลด์ขวา: แก้เบี้ยวหน้า-หลัง 
-float comp_slow_right_z = 0.0;  // สไลด์ขวา: แก้บิดหมุน
-float comp_slow_left_x  = 0.0;  // สไลด์ซ้าย: แก้เบี้ยวหน้า-หลัง
-float comp_slow_left_z  = 0.0;  // สไลด์ซ้าย: แก้บิดหมุน
+// --- 🐢 โหมดช้า (กด R2 หรือ L2) ---
+float comp_slow_right_x = 0.0;   // สไลด์ขวา: แก้เบี้ยวหน้า-หลัง 
+float comp_slow_right_z = 0.0;   // สไลด์ขวา: แก้บิดหมุน
+float comp_slow_left_x  = 0.0;   // สไลด์ซ้าย: แก้เบี้ยวหน้า-หลัง
+float comp_slow_left_z  = 0.0;   // สไลด์ซ้าย: แก้บิดหมุน
 
 // =========================================================
-
 
 void moveBase() {
   float forward_backward_speed = g_req_linear_vel_x; // เดินหน้า(+), ถอยหลัง(-)
@@ -79,8 +85,8 @@ void moveBase() {
 
   if (slide_speed != 0 && forward_backward_speed == 0 && spin_speed == 0) {
     
-    // เช็คโหมดความเร็ว: ถ้ายอดความเร็วสไลด์เท่ากับ n_slidespeed แสดงว่าเป็นโหมดช้า
-    bool is_slow_mode = (abs(slide_speed) == n_slidespeed);
+    // เช็คโหมดความเร็วจาก State
+    bool is_slow_mode = (current_mode != FAST_MODE);
 
     if (slide_speed > 0) { 
       // ==========================================
@@ -88,7 +94,7 @@ void moveBase() {
       // ==========================================
       if (is_slow_mode) {
         forward_backward_speed = comp_slow_right_x; 
-        spin_speed = comp_slow_right_z;             
+        spin_speed = comp_slow_right_z;            
       } else {
         forward_backward_speed = comp_fast_right_x;  
         spin_speed = comp_fast_right_z;  
@@ -135,22 +141,28 @@ void update_control() {
     return;
   }
   
-  // 🎮 ลำดับการเช็คโหมดความเร็ว
-  if (PS4.L2()) {
-    // 🐢 โหมดช้ามาก (กด L2)
-    walkspeed = s_walkspeed;
-    turnspeed = s_turnspeed;
-    slidespeed = s_slidespeed;
-  } else if (PS4.R2()) {
-    // 🚶 โหมดช้าปกติ (กด R2)
-    walkspeed = n_walkspeed;
-    turnspeed = n_turnspeed;
-    slidespeed = n_slidespeed;
+  // 🎮 ลำดับการเช็คโหมดความเร็ว (ใช้ Threshold ป้องกันจอยลั่น)
+  bool is_L2_pressed = PS4.L2Value() > TRIGGER_THRESHOLD;
+  bool is_R2_pressed = PS4.R2Value() > TRIGGER_THRESHOLD;
+
+  // จัดการกรณีเผลอกดพร้อมกัน ให้ยึดโหมดช้าสุด (L2) ไว้ก่อน
+  if (is_L2_pressed && is_R2_pressed) {
+    current_mode = SLOW_MODE;
+  } else if (is_L2_pressed) {
+    current_mode = SLOW_MODE;   // 🐢 โหมดช้ามาก
+  } else if (is_R2_pressed) {
+    current_mode = NORMAL_MODE; // 🚶 โหมดช้าปกติ
   } else {
-    // 🏃 โหมดปกติ/เร็ว (ไม่ได้กดอะไร)
-    walkspeed = f_walkspeed;
-    turnspeed = f_turnspeed;
-    slidespeed = f_slidespeed;
+    current_mode = FAST_MODE;   // 🏃 โหมดปกติ/เร็ว
+  }
+
+  // เซ็ตความเร็วตามโหมดปัจจุบัน
+  if (current_mode == SLOW_MODE) {
+    walkspeed = s_walkspeed; turnspeed = s_turnspeed; slidespeed = s_slidespeed;
+  } else if (current_mode == NORMAL_MODE) {
+    walkspeed = n_walkspeed; turnspeed = n_turnspeed; slidespeed = n_slidespeed;
+  } else {
+    walkspeed = f_walkspeed; turnspeed = f_turnspeed; slidespeed = f_slidespeed;
   }
 
   float d_x = 0;
@@ -201,34 +213,6 @@ void digital_control(){
     Serial2.write('D'); 
   }
   last_circle_state = circle_pressed;  
-
-  // if (PS4.L2()) {
-  //   Serial2.write('D'); 
-  // }
-
-  
-//   bool share_pressed = PS4.Share();
-//   if (share_pressed && !last_share_state) {
-//     digitalWrite(RelayM1_PIN1, !digitalRead(RelayM1_PIN1));
-//   }
-//   last_share_state = share_pressed;
-
-//   bool options_pressed = PS4.Options();
-//   if (options_pressed && !last_options_state) {
-//     digitalWrite(RelayM1_PIN4, !digitalRead(RelayM1_PIN4));
-//   }
-//   last_options_state = options_pressed;
-
-//   // sent to slave
-
-
-//   bool circle_pressed = PS4.Circle();
-//   if (circle_pressed && !last_circle_state) {
-//     Wire.beginTransmission(Address_Small);
-//     Wire.write('B');
-//     Wire.endTransmission();
-//     }
-//     last_circle_state = circle_pressed;  
 }
 
 void lift_control() {
@@ -241,20 +225,21 @@ void lift_control() {
   // --- 1. ตรวจจับและตั้งสถานะให้ Box (R_Y) ---
   if (abs(R_Y) > RStickY_Calib) {
     if (R_Y > 0) {
-      current_box_state = (walkspeed == f_walkspeed) ? 'E' : 'e';
+      current_box_state = (current_mode == FAST_MODE) ? 'E' : 'e';
     } else {
-      current_box_state = (walkspeed == f_walkspeed) ? 'F' : 'f';
+      current_box_state = (current_mode == FAST_MODE) ? 'F' : 'f';
     }
   } 
 
   // --- 2. ตรวจจับและตั้งสถานะให้ Arm (L_Y) ---
   if (abs(L_Y) > LStickY_Calib) {
     if (L_Y > 0) {
-      current_arm_state = (walkspeed == f_walkspeed) ? 'G' : 'g';
+      current_arm_state = (current_mode == FAST_MODE) ? 'G' : 'g';
     } else {
-      current_arm_state = (walkspeed == f_walkspeed) ? 'H' : 'h';
+      current_arm_state = (current_mode == FAST_MODE) ? 'H' : 'h';
     }
   } 
+  
   if (current_box_state != last_box_state) {
     Serial2.write(current_box_state);
     last_box_state = current_box_state;
@@ -275,10 +260,12 @@ void setup() {
 }
 
 void loop() {
-  update_control();
-
   unsigned long now = millis();
+
   if ((now - prev_control_time) >= (1000 / COMMAND_RATE)) {
+    
+    update_control();
+    
     moveBase();
     digital_control();
     lift_control();
