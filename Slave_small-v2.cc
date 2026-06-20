@@ -77,11 +77,11 @@ void loop() {
             digitalWrite(RELAY_2, !digitalRead(RELAY_2));
         } else if (command == 'B') {
             digitalWrite(RELAY_3, !digitalRead(RELAY_3));
-        } else if (command == 'C') {
-            digitalWrite(RELAY_1, LOW); 
-        } else if (command == 'c') {
-            digitalWrite(RELAY_1, HIGH); 
         } else if (command == 'D') {
+            digitalWrite(RELAY_1, LOW); 
+        } else if (command == 'd') {
+            digitalWrite(RELAY_1, HIGH); 
+        } else if (command == 'C') {
             digitalWrite(RELAY_4, !digitalRead(RELAY_4));
         } 
         else if (command == 'E' || command == 'e' || command == 'F' || command == 'f' || command == 'U') {

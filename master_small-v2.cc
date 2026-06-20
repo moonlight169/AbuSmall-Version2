@@ -19,16 +19,16 @@ float g_req_linear_vel_x = 0;
 float g_req_linear_vel_y = 0;
 float g_req_angular_vel_z = 0;
 
-float f_walkspeed = 1.2+0.3;
-float n_walkspeed = 0.5;
+float f_walkspeed = 1.5 * 0.9;
+float n_walkspeed = 0.5 * 0.9;
 float s_walkspeed = 0.2; // 🐢 ช้ามาก (เดินหน้า/ถอยหลัง)
 
-float f_turnspeed = 3.0+0.2;
-float n_turnspeed = 1.0;
+float f_turnspeed = 3.2 * 0.9;
+float n_turnspeed = 1.0 * 0.9;
 float s_turnspeed = 0.7; // 🐢 ช้ามาก (หมุนตัว)
 
-float f_slidespeed = 1.0;
-float n_slidespeed = 0.5;
+float f_slidespeed = 1.0 * 0.9;
+float n_slidespeed = 0.5 * 0.9;
 float s_slidespeed = 0.5; // 🐢 ช้ามาก (สไลด์ข้าง)
 
 //------------------------------------
@@ -201,18 +201,18 @@ void digital_control(){
   last_square_state = square_pressed;
 
   bool x_pressed = PS4.Cross();
-  if (x_pressed && !last_x_state) {
-    Serial2.write('C');
-  } else if (!x_pressed && last_x_state) {
-    Serial2.write('c');
+  if (x_pressed && !last_circle_state) {
+    Serial2.write('C'); 
   }
-  last_x_state = x_pressed;
+  last_x_state = x_pressed;  
 
   bool circle_pressed = PS4.Circle();
-  if (circle_pressed && !last_circle_state) {
-    Serial2.write('D'); 
+  if (circle_pressed && !last_x_state) {
+    Serial2.write('D');
+  } else if (!x_pressed && last_x_state) {
+    Serial2.write('d');
   }
-  last_circle_state = circle_pressed;  
+  last_circle_state = circle_pressed;
 }
 
 void lift_control() {
@@ -225,9 +225,9 @@ void lift_control() {
   // --- 1. ตรวจจับและตั้งสถานะให้ Box (R_Y) ---
   if (abs(R_Y) > RStickY_Calib) {
     if (R_Y > 0) {
-      current_box_state = (current_mode == FAST_MODE) ? 'E' : 'e';
-    } else {
       current_box_state = (current_mode == FAST_MODE) ? 'F' : 'f';
+    } else {
+      current_box_state = (current_mode == FAST_MODE) ? 'E' : 'e';
     }
   } 
 
