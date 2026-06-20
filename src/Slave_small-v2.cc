@@ -5,7 +5,7 @@ int current_box_pwm = 0;
 char armState = 'V';
 
 const int speed_arm_fast = 150;
-const int speed_arm_slow = 36;
+const int speed_arm_slow = 45;
 
 const int freq = 5000;      // ความถี่ 5kHz
 const int resolution = 8;   // 0-255
