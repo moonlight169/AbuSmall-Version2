@@ -21,8 +21,8 @@ float g_req_linear_vel_x = 0;
 float g_req_linear_vel_y = 0;
 float g_req_angular_vel_z = 0;
 
-float f_walkspeed = 1.5 * Nerf;
-float n_walkspeed = 0.5 * Nerf;
+float f_walkspeed = 1.2 * Nerf;
+float n_walkspeed = 0.5 * (Nerf - 0.1);
 float s_walkspeed = 0.2; 
 
 float f_turnspeed = 3.2 * Nerf;
@@ -61,10 +61,10 @@ int last_box_pwm = 0;
 char last_arm_state = 'V';
 
 // =========================================================
-float comp_fast_right_x = -0.1;  
-float comp_fast_right_z = 0.13;  
-float comp_fast_left_x  = 0.3;   
-float comp_fast_left_z  = 0.13;  
+float comp_fast_right_x = 0.0;  
+float comp_fast_right_z = 0.0;  
+float comp_fast_left_x  = 0.0;   
+float comp_fast_left_z  = 0.0;  
 
 float comp_slow_right_x = 0.0;   
 float comp_slow_right_z = 0.0;   
