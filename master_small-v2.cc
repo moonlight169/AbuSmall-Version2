@@ -201,15 +201,15 @@ void digital_control(){
   last_square_state = square_pressed;
 
   bool x_pressed = PS4.Cross();
-  if (x_pressed && !last_circle_state) {
+  if (x_pressed && !last_x_state) {
     Serial2.write('C'); 
   }
   last_x_state = x_pressed;  
 
   bool circle_pressed = PS4.Circle();
-  if (circle_pressed && !last_x_state) {
+  if (circle_pressed && !last_circle_state) {
     Serial2.write('D');
-  } else if (!x_pressed && last_x_state) {
+  } else if (!circle_pressed && last_circle_state) {
     Serial2.write('d');
   }
   last_circle_state = circle_pressed;
