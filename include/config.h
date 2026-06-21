@@ -3,7 +3,21 @@
 #define tx_pin 22
 
 #define MAC "88:57:21:8b:61:8c"
+#define MAC_PS5 "E8:47:3A:A1:F3:FE"
 #define MAX_RPM 200
+
+// ช่องสำหรับ ESP-NOW (ใช้ร่วมกันทั้งเครื่องส่งและเครื่องรับ)
+#ifndef ESP_NOW_CHANNEL
+#define ESP_NOW_CHANNEL 1
+#endif
+
+// Receiver MAC for ESP-NOW (6 bytes)
+static const uint8_t RECEIVER_MAC[6] = {0x88, 0x57, 0x21, 0x8B, 0x61, 0x8C};
+
+// PS4 MAC address string (for PS4Controller library)
+#ifndef PS4_MAC
+#define PS4_MAC "1A:2B:3C:4D:5E:6F"
+#endif
 
 // #define MotorPinFLM1_A 23
 // #define MotorPinFLM1_B 19
