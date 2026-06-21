@@ -4,6 +4,7 @@
 #include "Holding.h"
 #include "Kinematics.h"
 #include <PS4Controller.h>
+#include "esp_bt.h"
 
 Motor MotorFL(MotorPinFLM1_A, MotorPinFLM1_B, MAX_RPM);
 Motor MotorFR(MotorPinFRM1_A, MotorPinFRM1_B, MAX_RPM);
@@ -241,9 +242,19 @@ void lift_control() {
 }
 
 void setup() {
+  setCpuFrequencyMhz(240);
   Serial.begin(115200);
   Serial2.begin(115200, SERIAL_8N1, 21, 22);
+
   PS4.begin(MAC);
+
+  esp_bredr_tx_power_set(ESP_PWR_LVL_P9, ESP_PWR_LVL_P9); 
+
+  esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
+  esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_ADV, ESP_PWR_LVL_P9);
+  esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_SCAN, ESP_PWR_LVL_P9);
+  
+  Serial.println("Bluetooth TX Power unlocked to MAX (+9dBm)!");
 }
 
 void loop() {
