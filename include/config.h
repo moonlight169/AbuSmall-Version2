@@ -3,7 +3,7 @@
 #define tx_pin 22
 
 #define MAC "88:57:21:8b:61:8c"
-#define MAC_PS5 "E8:47:3A:A1:F3:FE"
+#define MAC_PS5 "D4:2F:4B:00:DB:AB"
 #define MAX_RPM 200
 
 // ช่องสำหรับ ESP-NOW (ใช้ร่วมกันทั้งเครื่องส่งและเครื่องรับ)
