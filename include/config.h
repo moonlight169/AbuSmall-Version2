@@ -2,46 +2,33 @@
 #define rx_pin 21
 #define tx_pin 22
 
-#define MAC "88:57:21:8b:61:8c"
 #define MAC_PS5 "D4:2F:4B:00:DB:AB"
 #define MAX_RPM 200
 
-// ช่องสำหรับ ESP-NOW (ใช้ร่วมกันทั้งเครื่องส่งและเครื่องรับ)
-#ifndef ESP_NOW_CHANNEL
-#define ESP_NOW_CHANNEL 1
-#endif
 
-// Receiver MAC for ESP-NOW (6 bytes)
-static const uint8_t RECEIVER_MAC[6] = {0x88, 0x57, 0x21, 0x8B, 0x61, 0x8C};
-
-// PS4 MAC address string (for PS4Controller library)
-#ifndef PS4_MAC
-#define PS4_MAC "1A:2B:3C:4D:5E:6F"
-#endif
-
-// #define MotorPinFLM1_A 23
-// #define MotorPinFLM1_B 19
-
-// #define MotorPinFRM1_A 18
-// #define MotorPinFRM1_B 17
-
-// #define MotorPinRLM1_A 4
-// #define MotorPinRLM1_B 16
-
-// #define MotorPinRRM1_A 27
-// #define MotorPinRRM1_B 13
-
-#define MotorPinFLM1_A 27
-#define MotorPinFLM1_B 13
+#define MotorPinFLM1_A 18
+#define MotorPinFLM1_B 17
 
 #define MotorPinFRM1_A 16
 #define MotorPinFRM1_B 4
 
-#define MotorPinRLM1_A 18
-#define MotorPinRLM1_B 17
+#define MotorPinRLM1_A 27
+#define MotorPinRLM1_B 13
 
 #define MotorPinRRM1_A 19
 #define MotorPinRRM1_B 23
+
+// #define MotorPinFLM1_A 27
+// #define MotorPinFLM1_B 13
+
+// #define MotorPinFRM1_A 16
+// #define MotorPinFRM1_B 4
+
+// #define MotorPinRLM1_A 18
+// #define MotorPinRLM1_B 17
+
+// #define MotorPinRRM1_A 19
+// #define MotorPinRRM1_B 23
 
 #define MT_BOX_A 18
 #define MT_BOX_B 17

@@ -1,9 +1,8 @@
 #include "Arduino.h"
 #include "Motor.h"
 #include "config.h"
-#include "Holding.h"
 #include "Kinematics.h"
-#include <ps5Controller.h> // เปลี่ยนเป็นไลบรารีของ PS5
+#include <ps5Controller.h>
 #include "esp_bt.h"
 
 Motor MotorFL(MotorPinFLM1_A, MotorPinFLM1_B, MAX_RPM);
@@ -151,8 +150,8 @@ void update_control() {
   if (ps5.Up() || ps5.UpRight() || ps5.UpLeft()) d_x = walkspeed; 
   else if (ps5.Down() || ps5.DownRight() || ps5.DownLeft()) d_x = -walkspeed; 
 
-  if (ps5.Left() || ps5.UpLeft() || ps5.DownLeft()) d_y = -slidespeed; 
-  else if (ps5.Right() || ps5.UpRight() || ps5.DownRight()) d_y = slidespeed; 
+  if (ps5.Left() || ps5.UpLeft() || ps5.DownLeft()) d_y = slidespeed; 
+  else if (ps5.Right() || ps5.UpRight() || ps5.DownRight()) d_y = -slidespeed; 
 
   if (ps5.L1()) d_z = turnspeed; 
   else if (ps5.R1()) d_z = -turnspeed; 
