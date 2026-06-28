@@ -116,20 +116,15 @@ void stopAllMotors() {
   MotorFL.run(0); MotorFR.run(0); MotorRL.run(0); MotorRR.run(0);
 
   if (last_box_pwm != 0 || last_arm_state != 'V') {
-    Serial2.print('S');
+    if (Serial2) Serial2.print('S');
     last_box_pwm = 0;
     last_arm_state = 'V';
   }
 }
 
 void update_control() {
-  if (!ps5.isConnected()) { // เปลี่ยนเป็น ps5
-    stopAllMotors();
-    return;
-  }
-  
-  bool is_L2_pressed = ps5.L2Value() > TRIGGER_THRESHOLD; // เปลี่ยนเป็น ps5
-  bool is_R2_pressed = ps5.R2Value() > TRIGGER_THRESHOLD; // เปลี่ยนเป็น ps5
+  bool is_L2_pressed = ps5.L2Value() > TRIGGER_THRESHOLD; 
+  bool is_R2_pressed = ps5.R2Value() > TRIGGER_THRESHOLD; 
 
   if (is_L2_pressed && is_R2_pressed) {
     current_mode = SLOW_MODE;
@@ -153,14 +148,14 @@ void update_control() {
   float d_y = 0;
   float d_z = 0;
 
-  if (ps5.Up() || ps5.UpRight() || ps5.UpLeft()) d_x = walkspeed; // เปลี่ยนเป็น ps5
-  else if (ps5.Down() || ps5.DownRight() || ps5.DownLeft()) d_x = -walkspeed; // เปลี่ยนเป็น ps5
+  if (ps5.Up() || ps5.UpRight() || ps5.UpLeft()) d_x = walkspeed; 
+  else if (ps5.Down() || ps5.DownRight() || ps5.DownLeft()) d_x = -walkspeed; 
 
-  if (ps5.Left() || ps5.UpLeft() || ps5.DownLeft()) d_y = -slidespeed; // เปลี่ยนเป็น ps5
-  else if (ps5.Right() || ps5.UpRight() || ps5.DownRight()) d_y = slidespeed; // เปลี่ยนเป็น ps5
+  if (ps5.Left() || ps5.UpLeft() || ps5.DownLeft()) d_y = -slidespeed; 
+  else if (ps5.Right() || ps5.UpRight() || ps5.DownRight()) d_y = slidespeed; 
 
-  if (ps5.L1()) d_z = turnspeed; // เปลี่ยนเป็น ps5
-  else if (ps5.R1()) d_z = -turnspeed; // เปลี่ยนเป็น ps5
+  if (ps5.L1()) d_z = turnspeed; 
+  else if (ps5.R1()) d_z = -turnspeed; 
 
   g_req_linear_vel_x = d_x;
   g_req_linear_vel_y = d_y;
@@ -168,29 +163,29 @@ void update_control() {
 }
 
 void digital_control(){
-  bool triangle_pressed = ps5.Triangle(); // เปลี่ยนเป็น ps5
+  bool triangle_pressed = ps5.Triangle(); 
   if (triangle_pressed && !last_triangle_state) {
-    Serial2.write('A'); 
+    if (Serial2) Serial2.write('A'); 
   }
   last_triangle_state = triangle_pressed;
 
-  bool square_pressed = ps5.Square(); // เปลี่ยนเป็น ps5
+  bool square_pressed = ps5.Square(); 
   if (square_pressed && !last_square_state) {
-    Serial2.write('B'); 
+    if (Serial2) Serial2.write('B'); 
   }
   last_square_state = square_pressed;
 
-  bool x_pressed = ps5.Cross(); // เปลี่ยนเป็น ps5
+  bool x_pressed = ps5.Cross(); 
   if (x_pressed && !last_x_state) {
-    Serial2.write('C'); 
+    if (Serial2) Serial2.write('C'); 
   }
   last_x_state = x_pressed;  
 
-  bool circle_pressed = ps5.Circle(); // เปลี่ยนเป็น ps5
+  bool circle_pressed = ps5.Circle(); 
   if (circle_pressed && !last_circle_state) {
-    Serial2.write('D');
+    if (Serial2) Serial2.write('D');
   } else if (!circle_pressed && last_circle_state) {
-    Serial2.write('d');
+    if (Serial2) Serial2.write('d');
   }
   last_circle_state = circle_pressed;
 }
@@ -205,8 +200,8 @@ int getAnalogPWM(int stick_val, int deadzone, int max_speed) {
 }
 
 void lift_control() {
-  int R_Y = ps5.RStickY(); // เปลี่ยนเป็น ps5
-  int L_Y = ps5.LStickY(); // เปลี่ยนเป็น ps5
+  int R_Y = ps5.RStickY(); 
+  int L_Y = ps5.LStickY(); 
   
   int limit_speed = 255; 
   if (current_mode == SLOW_MODE || current_mode == NORMAL_MODE) {
@@ -215,8 +210,10 @@ void lift_control() {
   int current_box_pwm = getAnalogPWM(R_Y, RStickY_Calib, limit_speed);
 
   if (current_box_pwm != last_box_pwm) {
-    Serial2.print("X"); 
-    Serial2.println(current_box_pwm);
+    if (Serial2) {
+      Serial2.print("X"); 
+      Serial2.println(current_box_pwm);
+    }
     last_box_pwm = current_box_pwm;
   }
 
@@ -230,7 +227,7 @@ void lift_control() {
   } 
 
   if (current_arm_state != last_arm_state) {
-    Serial2.write(current_arm_state);
+    if (Serial2) Serial2.write(current_arm_state);
     last_arm_state = current_arm_state;
   }
 }
@@ -240,7 +237,7 @@ void setup() {
   Serial.begin(115200);
   Serial2.begin(115200, SERIAL_8N1, 21, 22);
 
-  ps5.begin(MAC_PS5); // เปลี่ยนเป็น ps5
+  ps5.begin(MAC_PS5); 
 
   esp_bredr_tx_power_set(ESP_PWR_LVL_P9, ESP_PWR_LVL_P9); 
 
@@ -255,10 +252,16 @@ void loop() {
   unsigned long now = millis();
 
   if ((now - prev_control_time) >= (1000 / COMMAND_RATE)) {
-    update_control();
-    moveBase();
-    digital_control();
-    lift_control();
+    
+    if (!ps5.isConnected()) {
+      stopAllMotors(); 
+    } else {
+      update_control();
+      digital_control();
+      lift_control();
+    }
+    moveBase(); 
+    
     prev_control_time = now;
   }
 }

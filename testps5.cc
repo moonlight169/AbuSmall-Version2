@@ -16,24 +16,13 @@ void setup() {
 }
 
 void loop() {
-  // เช็คสถานะปัจจุบัน
   bool current_connection_state = ps5.isConnected();
-
-  // ตรวจสอบว่ามีการเปลี่ยนแปลงสถานะหรือไม่ (จะได้ไม่ Print ซ้ำรัวๆ)
   if (current_connection_state != last_connection_state) {
     if (current_connection_state == true) {
       Serial.println("✅ PS5 Controller Connected Successfully!");
-      
-      // ตัวอย่างการสั่งสั่นเบาๆ เพื่อยืนยันว่าต่อติดแล้ว
-      ps5.setRumble(50, 50); // มอเตอร์ซ้าย, ขวา (0-255)
-      delay(300);
-      ps5.setRumble(0, 0);
-      
     } else {
       Serial.println("❌ PS5 Controller Disconnected.");
     }
-    
-    // อัปเดตสถานะล่าสุด
     last_connection_state = current_connection_state;
   }
 
